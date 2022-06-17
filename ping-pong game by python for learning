@@ -1,0 +1,176 @@
+import pygame,os,sys,random
+from pygame.locals import *
+
+pygame.init()
+
+pygame.display.set_caption('乒乓球Sometky')
+
+view=pygame.display.set_mode((600,600))
+view.fill((255,255,255))
+
+pygame.display.update()
+
+class BALL:
+    posi=[50,50]
+    funx=1
+    funy=0
+    speed=30
+    cspeed=0
+    def __init__(self):
+        if random.randint(0,100)%2==0:
+            self.funx=-1
+    
+    def move(self,board):
+        if self.cspeed!=self.speed:
+            self.cspeed+=1
+            return
+        else:
+            self.cspeed=0
+
+        if (self.posi[0]<0 or self.posi[0]>=100):
+            sys.exit()
+            os.system('python pingpong.py')
+            
+
+        #上下碰撞
+        if self.posi[1]<=0 or self.posi[1]>=99:
+            self.funy*=-1
+        
+        if board.posi[self.posi[0]][self.posi[1]]==1 and self.funx>0:
+            temp=0
+            if (self.speed-3>=10):
+                self.speed-=3
+            for i in range(100):
+                if board.posi[99][self.posi[1]+i]==0 and self.posi[1]<100:
+                    break
+                else:
+                    temp+=1
+                    
+            self.funx*=-1
+            if temp<=5:
+                self.funy-=1
+            elif temp>5:
+                self.funy+=1
+
+        elif board.posi[self.posi[0]][self.posi[1]]==1 and self.funx<0:
+            temp=0
+            if self.speed-3>10:
+                self.speed-=3
+            for i in range(100):
+                if board.posi[0][self.posi[1]+i]==0 and self.posi[1]<100:
+                    break
+                else:
+                    temp+=1
+                    
+            self.funx*=-1
+            if temp<=5:
+                self.funy-=1
+            elif temp>5:
+                self.funy+=1
+            print('当前速度为：',self.speed)
+
+
+        board.posi[self.posi[0]][self.posi[1]]=0
+        while (self.posi[1]+self.funy<0):
+            self.funy+=1
+        while self.posi[1]+self.funy>99:
+            self.funy-=1
+        self.posi[0]+=self.funx
+        self.posi[1]+=self.funy
+        if (self.posi[0]<0 or self.posi[0]>=100):
+            sys.exit()
+            os.system('python pingpong.py')
+            
+        if (self.posi[0]>=0 and self.posi[0]<100) and (self.posi[1]>=0 and self.posi[1]<100):
+            board.posi[self.posi[0]][self.posi[1]]=2
+
+
+
+class BOARD:
+    posi=[]
+    def __init__(self):
+        for i in range(100):
+            self.posi.append([0]*100)
+        self.posi[50][50]=2
+    
+    def draw(self):
+        for i in range(100):
+            for j in range(100):
+                if self.posi[i][j]==1:
+                    pygame.draw.rect(view,(0,0,0),(i*6,j*6,6,6))
+                elif self.posi[i][j]==2:
+                    pygame.draw.circle(view,(0,0,0),(i*6,j*6),6)
+
+    def checkself(self):
+        for i in self.posi:
+            for j in i:
+                print(j,end='')
+            print('')
+
+class TOOL:
+    posi=[0,0]
+    def __init__(self,a,b):
+        self.posi=[0,0]
+        self.posi[0]=a
+        self.posi[1]=b
+
+    def toolset(self,board):
+        for i in range(self.posi[1]-5,self.posi[1]+6):
+            if i>=0 and i<100:
+                board.posi[self.posi[0]][i]=1
+
+
+board=BOARD()
+ball=BALL()
+toolf=TOOL(0,50)
+toolr=TOOL(99,50)
+
+
+#时间检测
+while True:
+
+    for event in pygame.event.get():
+        if event.type==KEYDOWN:
+            if event.key==K_w:
+                
+                for i in range(5):
+                    if toolf.posi[1]+5<100:
+                        board.posi[0][toolf.posi[1]+5-i]=0
+                if toolf.posi[1]-5>0:
+                    toolf.posi[1]-=5
+            if event.key==K_s:
+            
+                for i in range(5):
+                    if toolf.posi[1]-5>0:
+                        board.posi[0][toolf.posi[1]-5+i]=0
+                if toolf.posi[1]+5<100:
+                    toolf.posi[1]+=5
+            if event.key==K_UP:
+            
+                for i in range(5):
+                    if toolr.posi[1]+5<100:
+                        board.posi[99][toolr.posi[1]+5-i]=0
+                if toolr.posi[1]-5>0:
+                    toolr.posi[1]-=5
+            if event.key==K_DOWN:
+            
+                for i in range(5):
+                    if toolr.posi[1]-5>0:
+                        board.posi[99][toolr.posi[1]-5+i]=0
+                if toolr.posi[1]+5<100:
+                    toolr.posi[1]+=5
+        if event.type==QUIT:
+            sys.exit()
+        
+    pygame.display.update()
+    view.fill((255,255,255))
+
+    #test
+
+
+    #乒乓球移动
+    ball.move(board)
+    #球拍放置
+    toolf.toolset(board)
+    toolr.toolset(board)
+    board.draw()
